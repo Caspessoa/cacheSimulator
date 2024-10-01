@@ -1,0 +1,18 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "gcc",
+            "displayName": "GCC 13.1.0 x86_64-w64-mingw32",
+            "description": "Usando compiladores: C = C:\\Users\\cassi\\Documents\\x86_64-13.1.0-release-posix-seh-msvcrt-rt_v11-rev1\\MinGW 64 bits\\bin\\gcc.exe, CXX = C:\\Users\\cassi\\Documents\\x86_64-13.1.0-release-posix-seh-msvcrt-rt_v11-rev1\\MinGW 64 bits\\bin\\g++.exe",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "C:/Users/cassi/Documents/x86_64-13.1.0-release-posix-seh-msvcrt-rt_v11-rev1/MinGW 64 bits/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "C:/Users/cassi/Documents/x86_64-13.1.0-release-posix-seh-msvcrt-rt_v11-rev1/MinGW 64 bits/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ]
+}
