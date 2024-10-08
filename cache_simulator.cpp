@@ -59,7 +59,7 @@ int main(int argc, char **argv){
     string arquivo = argv[6];
 
     //tentei trabalhar com os valores diretamente da conversão mas o compilador reclamou
-    Cache::initCache(conjuntos, bloco, associatividade, substituicao, arquivo);
+    Cache::initCache(conjuntos, bloco, associatividade, substituicao, flag, arquivo);
     Cache::show_config();
 
     //criar uma cache que execute os passos fazendo as verificações necessárias
