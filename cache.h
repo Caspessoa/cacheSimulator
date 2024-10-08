@@ -3,20 +3,26 @@
 
 #include <string>
 
+using std::string;
+
+struct Conjunto;
+
 class Cache {
 private:
     static int nsets;
     static int bsize;
     static int assoc;
-    static std::string subst;
-    static std::string file;
+    static string subst;
+    static string file;
     Cache() {} //não permite instâncias da cache
 
 public:
-    static void initCache(int& conjuntos, int& bloco, int& associatividade, std::string substituicao, std::string arquivo);
+    static void initCache(int& conjuntos, int& bloco, int& associatividade, string substituicao, string arquivo);
 
     // static void execute();
     static void show_config();
-}; 
+};
+
+
 
 #endif // __CACHE_H_
