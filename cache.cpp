@@ -1,15 +1,18 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <bitset>
 #include "cache.h"
 using std::ifstream;
 using std::ios_base;
 using std::cout;
 using std::endl;
+using std::bitset;
 
 int Cache::nsets = 0;
 int Cache::bsize = 0;
 int Cache::assoc = 0;
+int Cache::flag = 0;
 std::string Cache::file = "";
 std::string Cache::subst = "";
 
@@ -89,19 +92,29 @@ void Cache::execute(){
         --> apontar o miss de capacidade de alguma forma também
     }
     --> garantindo que todas as posições estão preenchidas com valores válidos, podemos aplicar as funções sem que precise fazer novas verificações, daí dá pra aplicar o algoritmo em si.
+
+    -->por fim, printar os resultados com base no flag
     _______________________________________________________________________________________________
 
 */
+
+void Cache::execute(){
+
+}
+
+
+
 
 void Cache::show_config(){
     cout << "\nConjuntos: " << nsets << "\nTamanho do bloco: " << bsize << "\nAssociatividade: " << assoc << "\nSubstituicao: " << subst << "\nArquivo lido: " << file << endl;
 }
 
-void Cache::initCache(int& conjuntos, int& bloco, int& associatividade, std::string substituicao, std::string arquivo){ 
+void Cache::initCache(const int& conjuntos, const int& bloco, const int& associatividade, const string substituicao, const int& flagImpressao, const string arquivo){ 
     nsets = conjuntos;
     bsize = bloco;
     assoc = associatividade;
     subst = substituicao;
+    flag = flagImpressao;
     file = arquivo;
 }
 
