@@ -1,92 +1,83 @@
 #ifndef __CACHE_H_
 #define __CACHE_H_
 
-#include <string>
-#include <fstream>
+#include <ctime>
+#include <random>
 
 using namespace std;
-using std::string;
-using std::fstream;
 
 struct Conjunto;
-
 struct Bloco;
 
 class Cache {
 private:
-    static int nSets;
-    static int bSize;
-    static int assoc;
-    static int flag;
-    static int bitsOffset;
-    static int bitsIndex;
-    static int bitsTag;
-    static float missRate; //miss
-    static float compulsoryRate; //miss compulsório
-    static float capacityRate; //miss capacidade
-    static float conflictRate; //miss conflito
-    static float hitRate; //hit
-    static unsigned int totalAccess;
-    static unsigned int totalMissCompulsory;
-    static unsigned int totalMissCapacity;
-    static unsigned int totalMissConflict;
-    static unsigned int totalMisses;
-    static unsigned int totalHits;
-    static string subst;
-    static string file;
-    static Conjunto *conjunto;
-    Cache() {} //não permite instâncias da cache
+    static int nSets; // Quantidade de conjuntos
+    static int bSize; // Tamanho do bloco
+    static int assoc; // Associatividade
+    static int flag; // Indicador do tipo de exibição de estatísticas
+    static int bitsOffset; // Quantidade de bits para offset
+    static int bitsIndex; // Quantidade de bits para o índice
+    static int bitsTag; // Quantidade de bits para tag
+    static int bFree; // Quantidade de blocos livres na cache
+    static float missRate; // Taxa de erros
+    static float compulsoryRate; // Taxa de erros compulsórios
+    static float capacityRate; // Taxa de erros de capacidade
+    static float conflictRate; // Taxa de erros de conflito
+    static float hitRate; // Taxa de acertos
+    static unsigned int totalAccess; // Número total de acessos
+    static unsigned int totalMissCompulsory; // Número total de erros compulsórios
+    static unsigned int totalMissCapacity; // Número total de erros de capacidade
+    static unsigned int totalMissConflict; // Número total de erros de conflito
+    static unsigned int totalMisses; // Número total de erros
+    static unsigned int totalHits; // Número total de acertos
+    static string subst; // Algoritmo de substituição
+    static string file; // Nome do arquivo
+    static Conjunto *conjunto; // Estrutura da cache
+
+    Cache() {} // Não permite instâncias da cache
 
 public:
-    // inicializa
-    static void newCache(const int& conjuntos, const int& bloco, const int& associatividade, const string substituicao, const int& flagImpressao, const string arquivo); //feito
+    // Inicializa a cache
+    static void newCache(const int& conjuntos, const int& bloco, const int& associatividade, const string substituicao, const int& flagImpressao, const string arquivo);
 
-    // inicializa os campos das estruturas 
-    static void initStructs(); //feito
+    // Inicializa as estruturas 
+    static void initStructs();
 
-    static void freeStructs(); //feito
+    // Libera as estruturas
+    static void freeStructs();
 
-    // faz a execução
+    // Executa a simulação da cache
     static void execute();
 
-    // mostra as configs
-    static void show_config(); //feito
+    // Exibe a configuração da cache
+    static void show_config();
 
-    // extrai a tag do endereco
-    static string extraiTag(const int& adress); //feito
+    // Verifica se a cache está cheia
+    static bool fullCache();
 
-    // compara tags A com B
-    static bool AeqB(const string& A, const string& B); //feito
+    // Verifica se houve acerto
+    static bool isHit(const int& index, const int& tag);
 
-    // retorna o cálculo do conjunto-alvo
-    static int calculaConjunto(const int& adress); //feito
+    // Verifica o preenchimento dos blocos da cache
+    static bool fullEntries(const int& index, const int& tag);
 
-    // converte string binário para decimal usando a bib <bitset>
-    static unsigned long stod(const int& adress);
+    // Algoritmo Random
+    static void RANDOM(const int& index, const int& tag, mt19937& range);
 
-    // verifica o hit (adressGroup -> conjunto)
-    // true -> encontrou
-    static bool isHit(const int& adressGroup, const int& tagAdress);
+    // Algoritmo First In First Out
+    static void FIFO(const int& index, const int& tag);
 
-    // verifica se todas as entradas do conjunto estão ocupadas por bits válidos
-    // true -> são válidas
-    static bool validEntries(const int& adressGroup, const int& tagAdress);
+    // Algoritimo Least Recently Used
+    static void LRU(const int& index, const int& tag);
 
-    // processa o endereco para a cache utilizando as verificacoes,
-    // funções anteriores e políticas de substituicao
+    // Calcula as estatísticas de execução da cache
+    static void log();
 
-    // aplica a substituição random
-    static void RANDOM(const int& adressGroup);
-    // aplica a substituição fifo
-    static void FIFO(const int& adressGroup);
-    // aplica a substituição last recently used
-    static void LRU(const int& adressGroup);
-
-    // // lê o endereco binário de uma linha do arquivo
-    // static string readAdress(fstream arquivo);
-
-    // printa os resultados com base no flag interno
+    // Exibe as estatísticas de execução da cache
     static void print();
+
+    // Exibe o conteúdo da cache
+    static void conteudoCache();
 };
 
 

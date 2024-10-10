@@ -1,9 +1,12 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <algorithm>
 #include <bitset>
 #include <vector>
 #include <cmath>
+#include <random>
+#include <ctime>
 #include "cache.h"
 
 using namespace std;
@@ -14,139 +17,24 @@ int Cache::assoc = 0;
 int Cache::flag = 0;
 int Cache::bitsOffset = 0;
 int Cache::bitsIndex = 0;
-int Cache::bitsTag = 0; //bits p tag
-float Cache::missRate = 0.0; //miss
-float Cache::compulsoryRate = 0.0; //miss compulsório
-float Cache::capacityRate = 0.0; //miss capacidade
-float Cache::conflictRate = 0.0; //miss conflito
-float Cache::hitRate = 0.0; //hit
+int Cache::bitsTag = 0;
+int Cache::bFree = 0;
+float Cache::missRate = 0.0;
+float Cache::compulsoryRate = 0.0;
+float Cache::capacityRate = 0.0;
+float Cache::conflictRate = 0.0;
+float Cache::hitRate = 0.0;
+string Cache::file = "";
+string Cache::subst = "";
+Conjunto* Cache::conjunto = nullptr;
 unsigned int Cache::totalAccess = 0;
 unsigned int Cache::totalMissCompulsory = 0;
 unsigned int Cache::totalMissCapacity = 0;
 unsigned int Cache::totalMissConflict = 0;
 unsigned int Cache::totalHits = 0;
 unsigned int Cache::totalMisses = 0;
-string Cache::file = "";
-string Cache::subst = "";
-Conjunto* Cache::conjunto = nullptr;
 
-
-// ESTRUTURA DA CACHE
-//  _______________________________
-// |       |          |            |
-// |  TAG  | VALIDADE | INFORMAÇÃO |
-// |_______|__________|____________|
-// (nesse caso a informaçao não sabemos, então é teórica)
-//
-// CADA ENDEREÇO LIDO: 32 BITS
-// 
-// pensei em criar uma estrutura auxiliar para a cache
-
-// com os 4 campos efetivos: tag, validade e em qual via está
-// estrutura pra via e estrutura pro conjunto
-
-// a chamada das estruturas no fim vai ser
-// Ex. definição: Conjunto conjunto[4]; --> se for por ex. 8 blocos/2 vias
-// inicialização: conjunto[0].bloco[0].tag
-// inicialização: conjunto[3].bloco[1024].tag
-
-
-
-
-void Cache::execute(){
-    ifstream data(file, ios::binary); // pra ler arquivo binário em modo binário
-    if (data)
-    {
-        int address;
-        while (data.read(reinterpret_cast<char*>(&address), sizeof(int)))
-        {
-            int tag = address >> (bitsOffset + bitsIndex);
-            int index = (address >> bitsOffset) & ((1 << bitsIndex) - 1);
-            totalAccess++;
-            if (!isHit(index, tag)){
-                if (!validEntries(index, tag)){
-                    if (subst == "r"){
-                        RANDOM(index);
-                    } else if (subst == "f") {
-                        FIFO(index);
-                    } else if (subst == "l"){
-                        LRU(index);
-                    } //identificar cada tipo de miss e adicionar acessos
-                }
-            }
-        }
-        data.close();  // Fecha o arquivo
-    }
-
-}
-    // dividir os bits pra tag e validade
-    // fazer endereço (do arquivo) módulo número de conjuntos (blocos/via) = conjunto correspondente
-
-    // buscar em cada entrada do conjunto 
-    // --> verificar se todas as entradas possuem validade 0
-    // --> se existirem entradas com validade 1, comparar tag
-    // --> se nao encontrar, substituir nas posições baseadas na lógica de substituição
-    // (exemplo 2 conjuntos com 2 vias -> 4 blocos)
-    // --> podemos criar métodos separados pra cada parte que contenha loop, isso deixaria o código mais limpo e fácil de ler e apresentar
-
-
-
-    //(MÉTODO ISHIT)
-    // --> em forma de loop porque podem existir inúmeros blocos em cada conjunto
-    // wasFound = false;
-    // (loop) -->verificar hit
-    // se conjunto[conjunto correspondente].bloco[i].val == true {
-    //     se conjunto[conjunto correspondente].bloco[i].tag == tagEndereco {
-    //         ++hit;
-    //         wasFound = true;
-    //         break;
-    //     }
-    // }
-
-
-
-    // (MÉTODO VALIDENTRIES)
-    // --> agora verificar se foi encontrado o endereço na cache, se não, aplicar algoritmo de substituição CASO todas as entradas estejam ocupadas
-    // se wasFound == false{
-    //     isInvalid = false;
-    //     (loop)
-    //     se conjunto[conjunto correspondente].bloco[i].val == false {
-    //         ++miss compulsório;
-    //         conjunto[conjunto correspondente].bloco[i].tag == tagEndereco;
-    //         conjunto[conjunto correspondente].bloco[i].val == true;
-    //         isInvalid = true; --> significa que foi encontrada uma posição vazia
-    //         break;
-    //     }
-    // }
-
-
-    // (MÉTODO PROCESSADRESS)
-    // --> confirma que todas as posições estão com o bit de validade true (1)
-    // se isInvalid == false { 
-    //     (loop)
-    //     --> ...aqui aplicar as lógicas de substituição...
-    //     se Cache::subst == "r" Cache::RANDOM(conjunto correspondente);
-    //     senão se Cache::subst == "f" Cache::FIFO(conjunto correspondente);
-    //     senão se Cache::subst == "l" Cache::LRU(conjunto correspondente);
-
-
-    //     --> em cada uma delas apontar o miss de conflito
-    //     --> apontar o miss de capacidade de alguma forma também
-    // }
-    // --> garantindo que todas as posições estão preenchidas com valores válidos, podemos aplicar as funções sem que precise fazer novas verificações, daí dá pra aplicar o algoritmo em si.
-
-    // -->por fim, printar os resultados com base no flag
-// }
-// void Cache::execute(){
-
-// }
-
-
-
-
-void Cache::show_config(){
-    cout << "\nConjuntos: " << nSets << "\nTamanho do bloco: " << bSize << "\nAssociatividade: " << assoc << "\nSubstituicao: " << subst << "\nArquivo lido: " << file << endl;
-}
+int swap_Endians(int value); // Altera o endereço de Big Endian pra Little Endian
 
 void Cache::newCache(const int& conjuntos, const int& bloco, const int& associatividade, const string substituicao, const int& flagImpressao, const string arquivo){ 
     nSets = conjuntos;
@@ -161,35 +49,72 @@ void Cache::newCache(const int& conjuntos, const int& bloco, const int& associat
     initStructs();
 }
 
+void Cache::execute(){
+    // Opera o arquivo em modo binário
+    ifstream data(file, ios::binary);
+    mt19937 range(random_device{}());
+    if (data)
+    {
+        int address;
+        while (data.read(reinterpret_cast<char*>(&address), sizeof(int)))
+        {
+            address = swap_Endians(address);
+            int tag = address >> (bitsOffset + bitsIndex);
+            int index = (address >> bitsOffset) & (nSets - 1);
+            totalAccess++;
+            if (!isHit(index, tag)){
+                if (fullEntries(index, tag)){
+                    if (subst == "r"){
+                        RANDOM(index, tag, range);
+                    } else if (subst == "f") {
+                        FIFO(index, tag);
+                    } else if (subst == "l"){
+                        LRU(index, tag);
+                    }
+                }
+            }
+        }
+        data.close(); // Fecha o arquivo
+    }
+}
+
+void Cache::show_config(){
+    cout <<
+    "\nConjuntos: " << nSets << 
+    "\nTamanho do bloco: " << bSize << 
+    "\nAssociatividade: " << assoc << 
+    "\nSubstituicao: " << subst << 
+    "\nArquivo lido: " << file << 
+    endl;
+}
+
+
+
 struct Bloco {
     int tag;
     bool val;
-    unsigned int priority;
 };
 
 struct Conjunto {
-    //vetor de campos [número de conjuntos que for necessário]
     Bloco *bloco;
+    unsigned int nextBlock; //para FIFO
+    vector<int> priorityLRU; 
 };
-
-// string Cache::readAdress(fstream arquivo){
-    
-// }
-
-int Cache::calculaConjunto(const int& adress){
-    // cout << "Conjunto referente ao endereco " << adress << ": "<< (adress % nsets) << endl; //debug
-
-    return adress % nSets;
-}
 
 void Cache::initStructs(){
     conjunto = new Conjunto[nSets];
 
     for (int i = 0; i < nSets; ++i){
         conjunto[i].bloco = new Bloco[assoc];
-        for (int j = 0; j < bSize; ++j){
+
+        //inicializa o próximo bloco a ser substituido pelo FIFO como 0
+        conjunto[i].nextBlock = 0;
+        for (int j = 0; j < assoc; ++j){
             conjunto[i].bloco[j].tag = 0;
             conjunto[i].bloco[j].val = false;
+
+            //organiza a ordem do LRU com o índice dos blocos
+            conjunto[i].priorityLRU.push_back(j);
         }
     }
 }
@@ -201,10 +126,21 @@ void Cache::freeStructs(){
     conjunto = nullptr;
 }
 
-bool Cache::isHit(const int& adressGroup, const int& tagAdress){
+bool Cache::isHit(const int& index, const int& tag){
     for (int i = 0; i < assoc; ++i){
-        if (conjunto[adressGroup].bloco[i].val == true){
-            if (conjunto[adressGroup].bloco[i].tag == tagAdress){
+        if (conjunto[index].bloco[i].val == true){
+            if (conjunto[index].bloco[i].tag == tag){
+
+                //encontra o indice (do tipo iterator) do bloco que recém foi acessado
+                auto iterador = find(conjunto[index].priorityLRU.begin(), conjunto[index].priorityLRU.end(), i);
+
+                //evita o acesso a elementos que não existem
+                if (iterador != conjunto[index].priorityLRU.end()){
+                    //atualiza a ordem do LRU
+                    conjunto[index].priorityLRU.erase(iterador);
+                    conjunto[index].priorityLRU.push_back(i);
+                }
+
                 ++totalHits;
                 return true;
             }
@@ -213,20 +149,81 @@ bool Cache::isHit(const int& adressGroup, const int& tagAdress){
     return false;
 }
 
-bool Cache::validEntries(const int& adressGroup, const int& tagAdress){
-    //utilizar o isHit antes, usando este como "else" subsequente
+bool Cache::fullEntries(const int& index, const int& tag){
     for (int i = 0; i < assoc; ++i){
-        if (conjunto[adressGroup].bloco[i].val == false){
+        if (conjunto[index].bloco[i].val == false){
             ++totalMissCompulsory;
-            conjunto[adressGroup].bloco[i].tag = tagAdress;
-            conjunto[adressGroup].bloco[i].val = true;
-            //adicionar acessos
-            return true;
+            conjunto[index].bloco[i].tag = tag;
+            conjunto[index].bloco[i].val = true;
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
+void Cache::log(){
+    totalMisses = totalMissCapacity + totalMissCompulsory + totalMissConflict;
+    hitRate = (float)totalHits / (float)totalAccess;
+    missRate = (float)totalMisses / (float)totalAccess;
+    compulsoryRate = (float)totalMissCompulsory / (float)totalMisses;
+    capacityRate = (float)totalMissCapacity / (float)totalMisses;
+    conflictRate = (float)totalMissConflict / (float)totalMisses;
+}
+
+void Cache::RANDOM(const int& index, const int& tag, std::mt19937& range){
+    uniform_int_distribution<int> distribution(0, assoc - 1);
+    int randomValue = distribution(range);
+
+    conjunto[index].bloco[randomValue].tag = tag;
+
+    if(fullCache()){
+        ++totalMissCapacity;
+    } else ++totalMissConflict;
+    
+}
+
+// aplica a substituição fifo
+void Cache::FIFO(const int& index, const int& tag){
+    Conjunto& actualSet = conjunto[index];
+    Bloco& substBlock = actualSet.bloco[actualSet.nextBlock];
+    
+    substBlock.tag = tag;
+
+    actualSet.nextBlock = (actualSet.nextBlock + 1) % assoc;
+
+    
+    if(fullCache()){
+        ++totalMissCapacity;
+    } else ++totalMissConflict;
+    
+}
+
+// aplica a substituição least recently used
+void Cache::LRU(const int& index, const int& tag){
+    //conjunto atual
+    Conjunto& actualSet = conjunto[index];
+
+    //primeiro bloco é o menos recentemente usado
+    int substBlockIndex = actualSet.priorityLRU.front();
+    Bloco& substBlock = actualSet.bloco[substBlockIndex];
+
+    //atualiza a tag do bloco da cache
+    substBlock.tag = tag;
+
+    //atualiza a lista LRU
+    actualSet.priorityLRU.erase(actualSet.priorityLRU.begin());
+    actualSet.priorityLRU.push_back(substBlockIndex);
+    
+    if(fullCache()){
+        ++totalMissCapacity;
+    } else ++totalMissConflict;
+
+}
+
+bool Cache::fullCache(){
+    if (totalMissCompulsory == (nSets * assoc)) return true;
+    return false;
+}
 
 void Cache::print(){
     if (flag == 0){
@@ -234,17 +231,15 @@ void Cache::print(){
         cout << "\n\t\t--------------------------------------------------\n";
         cout <<   "\t\t                     TAXAS                        \n";
         cout <<   "\t\t--------------------------------------------------\n\n";
-        cout << "\t\t[taxa de hits]. . . . . . . . . . . . . . . . . " << hitRate << endl;
-        cout << "\t\t[taxa de miss]. . . . . . . . . . . . . . . . . " << missRate << endl;
-        cout << "\t\t[taxa de miss compulsorios] . . . . . . . . . . " << compulsoryRate << endl;
-        cout << "\t\t[taxa de miss de capacidade]. . . . . . . . . . " << capacityRate << endl;
-        cout << "\t\t[taxa de miss de conflito]  . . . . . . . . . . " << conflictRate << "\n\n\n";
+        printf(   "\t\t[taxa de hits]. . . . . . . . . . . . . . . %.4f\n", hitRate);
+        printf(   "\t\t[taxa de miss]. . . . . . . . . . . . . . . %.4f\n", missRate);
+        printf(   "\t\t[taxa de miss compulsorios] . . . . . . . . %.4f\n", compulsoryRate);
+        printf(   "\t\t[taxa de miss de capacidade]. . . . . . . . %.4f\n", capacityRate);
+        printf(   "\t\t[taxa de miss de conflito]  . . . . . . . . %.4f\n\n", conflictRate);
         cout << "\n\t\t--------------------------------------------------\n";
         cout <<   "\t\t                    ACESSOS                       \n";
         cout <<   "\t\t--------------------------------------------------\n\n";
-        cout << "\t\t[total de acessos]. . . . . . . . . . . . . . . " << totalAccess << endl;
-        cout << "\t\t[acessos a cache] . . . . . . . . . . . . . . . " << "none" << endl;
-        cout << "\t\t[acessos a memoria principal] . . . . . . . . . " << "none" << endl;
+        cout << "\t\t[total de acessos] . . . . . . . . . . . . . . " << totalAccess << endl;
         cout << "\n\t\t--------------------------------------------------\n";
         cout <<   "\t\t                VALORES ABSOLUTOS                 \n";
         cout <<   "\t\t--------------------------------------------------\n\n";
@@ -252,23 +247,76 @@ void Cache::print(){
         cout << "\t\t[misses totais] . . . . . . . . . . . . . . . . " << totalMisses << endl;
         cout << "\t\t[misses compulsorios] . . . . . . . . . . . . . " << totalMissCompulsory << endl;
         cout << "\t\t[misses de capacidade]. . . . . . . . . . . . . " << totalMissCapacity << endl;
-        cout << "\t\t[misses de conflito]. . . . . . . . . . . . . . " << totalMissConflict << "\n\n" << endl;
-        
-        return;
+        cout << "\t\t[misses de conflito]. . . . . . . . . . . . . . " << totalMissConflict << "\n\n" << endl
+    } else if (flag == 1) {
+        printf("\n%d, %.2f, %.2f, %.2f, %.2f, %.2f\n", totalAccess, hitRate, missRate, compulsoryRate, capacityRate, conflictRate);
+    } else if (flag == 2) {
+        cout << "\t\t__________________________________________________\n\t\t__________________________________________________\n\t\t                  CONFIGURACAO                                             \n\t\t__________________________________________________\n\t\t__________________________________________________\n" <<
+        "\n\t\tConjuntos: " << nSets << 
+        "\n\t\tTamanho do bloco: " << bSize << 
+        "\n\t\tAssociatividade: " << assoc << 
+        "\n\t\tSubstituicao: " << subst << 
+        "\n\t\tArquivo lido: " << file << 
+        endl << endl;
+        cout << "\t\t__________________________________________________\n\t\t__________________________________________________\n\t\tRESULTADOS                                             \n\t\t__________________________________________________\n\t\t__________________________________________________\n";
+        cout << "\n\t\t--------------------------------------------------\n";
+        cout <<   "\t\t                     TAXAS                        \n";
+        cout <<   "\t\t--------------------------------------------------\n\n";
+        printf(   "\t\t[taxa de hits]. . . . . . . . . . . . . . . %.4f\n", hitRate);
+        printf(   "\t\t[taxa de miss]. . . . . . . . . . . . . . . %.4f\n", missRate);
+        printf(   "\t\t[taxa de miss compulsorios] . . . . . . . . %.4f\n", compulsoryRate);
+        printf(   "\t\t[taxa de miss de capacidade]. . . . . . . . %.4f\n", capacityRate);
+        printf(   "\t\t[taxa de miss de conflito]  . . . . . . . . %.4f\n\n", conflictRate);
+        cout << "\n\t\t--------------------------------------------------\n";
+        cout <<   "\t\t                    ACESSOS                       \n";
+        cout <<   "\t\t--------------------------------------------------\n\n";
+        cout << "\t\t[total de acessos] . . . . . . . . . . . . . . " << totalAccess << endl;
+        cout << "\n\t\t--------------------------------------------------\n";
+        cout <<   "\t\t                VALORES ABSOLUTOS                 \n";
+        cout <<   "\t\t--------------------------------------------------\n\n";
+        cout << "\t\t[hits totais] . . . . . . . . . . . . . . . . . " << totalHits << endl;
+        cout << "\t\t[misses totais] . . . . . . . . . . . . . . . . " << totalMisses << endl;
+        cout << "\t\t[misses compulsorios] . . . . . . . . . . . . . " << totalMissCompulsory << endl;
+        cout << "\t\t[misses de capacidade]. . . . . . . . . . . . . " << totalMissCapacity << endl;
+        cout << "\t\t[misses de conflito]. . . . . . . . . . . . . . " << totalMissConflict << "\n\n" << endl << endl;
+        conteudoCache();
     }
-    
     // else
-    cout << "\n" << totalAccess << ", " << hitRate << ", " << missRate << ", " << compulsoryRate << ", " << capacityRate << ", " << conflictRate << "\n" << endl;
 }
 
-void Cache::RANDOM(const int& adressGroup){
-
+void Cache::conteudoCache(){
+    for (int i = 0; i < nSets; ++i){
+        for (int j = 0; j < assoc; ++j){ 
+            printf("Indice [%d] Bloco [%d]: tag -> %d val -> %d\n", i, j, conjunto[i].bloco[j].tag, conjunto[i].bloco[j].val);
+        }
+        printf("\n");
+    }
 }
-// aplica a substituição fifo
-void Cache::FIFO(const int& adressGroup){
 
-}
-// aplica a substituição last recently used
-void Cache::LRU(const int& adressGroup){
+int swap_Endians(int value){ 
+    int leftmost_byte; 
+    int left_middle_byle; 
+    int right_middle_byte; 
+    int rightmost_byte; 
+    int result; 
+ 
+    leftmost_byte = (value & 0x000000FF) >> 0; 
 
-}
+    left_middle_byle = (value & 0x0000FF00) >> 8; 
+ 
+    right_middle_byte = (value & 0x00FF0000) >> 16; 
+ 
+    rightmost_byte = (value & 0xFF000000) >> 24; 
+
+    leftmost_byte <<= 24; 
+ 
+    left_middle_byle <<= 16; 
+ 
+    right_middle_byte <<= 8; 
+ 
+    rightmost_byte <<= 0; 
+ 
+    result = (leftmost_byte | left_middle_byle | right_middle_byte | rightmost_byte); 
+ 
+    return result; 
+} 

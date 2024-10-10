@@ -8,16 +8,11 @@
 
 using namespace std;
 
-void isValidFile(char **argv);
 void isValidArguments(int argc, char **argv);
-
-
-
-
 
 int main(int argc, char **argv){
     isValidArguments(argc, argv);
-    
+
     int conjuntos = stoi(argv[1]);
     int bloco = stoi(argv[2]);
     int associatividade = stoi(argv[3]);
@@ -25,30 +20,13 @@ int main(int argc, char **argv){
     string substituicao = argv[4];
     string arquivo = argv[6];
 
-    //tentei trabalhar com os valores diretamente da conversão mas o compilador reclamou
     Cache::newCache(conjuntos, bloco, associatividade, substituicao, flag, arquivo);
-    Cache::show_config();
+    Cache::execute();
+    Cache::log();
     Cache::print();
-
-    // Cache::execute();
-    //criar uma cache que execute os passos fazendo as verificações necessárias
-    //fazer ela retornar valores-alvo de impressao aqui na main
 
     return 0;
 }
-
-// void isValidFile(char **argv){
-//     ifstream arquivo;
-    
-//     try{   
-//         arquivo.exceptions(ifstream::failbit | ifstream::badbit);
-//         arquivo.open(argv[6]);
-//         arquivo.close();
-//     } catch (const ios_base::failure &e){
-//         cerr << "Erro ao abrir ou ler o arquivo: " << e.what() << endl;
-//         exit(1);
-//     }
-// }
 
 void isValidArguments(int argc, char **argv){
     if (argc != 7) {
@@ -57,10 +35,7 @@ void isValidArguments(int argc, char **argv){
         throw invalid_argument("Valor inválido em algum dos parâmetros da cache (nsets, bsize ou assoc)\n");
     } else if (argv[4][0] != 'r' && argv[4][0] != 'l' && argv[4][0] != 'f'){
         throw invalid_argument("Politica de substituicao invalida\n");
-    } else if (stoi(argv[5]) != 0 && stoi(argv[5]) != 1){
+    } else if (stoi(argv[5]) != 0 && stoi(argv[5]) != 1 && stoi(argv[5]) != 2){
         throw invalid_argument("Valor inválido para flag de impressão. Insira apenas 0 ou 1 no sexto campo do argumento\n");
     }
-    // cout << "Test 1 passed!\n";
-    // isValidFile(argv);
-    // cout << "Test 2 passed!\n";
 }
