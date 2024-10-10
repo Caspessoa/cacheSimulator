@@ -247,7 +247,7 @@ void Cache::print(){
         cout << "\t\t[misses totais] . . . . . . . . . . . . . . . . " << totalMisses << endl;
         cout << "\t\t[misses compulsorios] . . . . . . . . . . . . . " << totalMissCompulsory << endl;
         cout << "\t\t[misses de capacidade]. . . . . . . . . . . . . " << totalMissCapacity << endl;
-        cout << "\t\t[misses de conflito]. . . . . . . . . . . . . . " << totalMissConflict << "\n\n" << endl
+        cout << "\t\t[misses de conflito]. . . . . . . . . . . . . . " << totalMissConflict << "\n\n" << endl;
     } else if (flag == 1) {
         printf("\n%d, %.2f, %.2f, %.2f, %.2f, %.2f\n", totalAccess, hitRate, missRate, compulsoryRate, capacityRate, conflictRate);
     } else if (flag == 2) {
