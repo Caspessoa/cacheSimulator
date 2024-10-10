@@ -1,6 +1,5 @@
 # Simulador de Cache
-###### Cassiano Teixeira & Enderson Kruger
-#### Compilação: `g++ cache_simulator.cpp cache.cpp -o cache_simulator`
+###### [Cassiano Teixeira](https://github.com/Caspessoa) & [Enderson Kruger](https://github.com/endersonkruger)#### Compilação: `g++ cache_simulator.cpp cache.cpp -o cache_simulator`
 #### Execução: cache_simulator `<nsets> <bsize> <assoc> <substituição> <flag_saida> <arquivo_de_entrada>`
 ###### Onde:
 - `cache_simulator` - nome do arquivo de execução principal do simulador
