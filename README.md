@@ -11,7 +11,7 @@
 - `bsize` - tamanho do bloco em bytes
 - `assoc` - grau de associatividade
 - `substituição` - política de substituição, que pode ser Random (R), FIFO (F) ou L (LRU)
-`flag_saida` - flag que ativa o modo padrão de saída de dados, que pode ser 0 (Padrão), 1 (Detalhado) ou 2 (Detalhado+)
+- `flag_saida` - flag que ativa o modo padrão de saída de dados, que pode ser 0 (Padrão), 1 (Detalhado) ou 2 (Detalhado+)
 - `arquivo_de_entrada` - arquivo com os endereços para acesso à cache.
 ---
 Trabalho como requisito parcial de avaliação semestral \
